@@ -4,7 +4,7 @@ import time
 import os
 from mlxtend.frequent_patterns import apriori, fpgrowth
 
-print("Current working directory:", os.getcwd())
+#print("Current working directory:", os.getcwd())
 
 
 def load_data(dataset_name):
@@ -50,13 +50,27 @@ def generate_frequent_itemsets(transactions, min_support_count):
     itemsets = [tuple([item]) for item in preprocess_transactions(transactions)]
     frequent_itemsets = {}
     k = 1
-    while itemsets:
+    max_k = len(set(item for transaction in transactions for item in transaction))  # Maximum itemset size
+
+    for k in range(1, max_k + 1):
         candidates = generate_candidates(itemsets, k)
         itemset_counts = count_itemsets(transactions, candidates)
-        frequent_itemsets.update({itemset: count for itemset, count in itemset_counts.items() if count >= min_support_count})
+
+        # Update frequent itemsets based on support count
+        frequent_itemsets.update({
+            itemset: count 
+            for itemset, count in itemset_counts.items() 
+            if count >= min_support_count
+        })
+        
         itemsets = list(itemset_counts.keys())
-        k += 1
+        
+        # If there are no frequent itemsets left, we can break early
+        if not itemsets:
+            break
+
     return frequent_itemsets
+    
 
 def generate_association_rules(frequent_itemsets, min_confidence):
     rules = []
@@ -70,6 +84,7 @@ def generate_association_rules(frequent_itemsets, min_confidence):
                     if confidence >= min_confidence:
                         rules.append((antecedent, consequent, confidence))
     return rules
+     
 
 def main():
     dataset_name = input("Select a dataset (Amazon, Best Buy, Kmart, Nike, General): ")
